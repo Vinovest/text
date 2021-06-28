@@ -11,6 +11,7 @@
 package currency // import "golang.org/x/text/currency"
 
 import (
+	"encoding/json"
 	"errors"
 	"sort"
 
@@ -67,6 +68,37 @@ func (k Kind) Rounding(cur Unit) (scale, increment int) {
 // Unit is an ISO 4217 currency designator.
 type Unit struct {
 	index uint16
+}
+
+func (u *Unit) UnmarshalText(text []byte) error {
+	v, err := ParseISO(string(text))
+	if err != nil {
+		return err
+	}
+	*u = v
+	return nil
+}
+
+func (u Unit) MarshalText() (text []byte, err error) {
+	return []byte(u.String()), nil
+}
+
+func (u Unit) MarshalJSON() ([]byte, error) {
+	return json.Marshal(u.String())
+}
+
+func (u *Unit) UnmarshalJSON(b []byte) error {
+	var out string
+	err := json.Unmarshal(b, &out)
+	if err != nil {
+		return err
+	}
+	v, err := ParseISO(out)
+	if err != nil {
+		return err
+	}
+	*u = v
+	return nil
 }
 
 // String returns the ISO code of u.
